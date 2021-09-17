@@ -7,40 +7,38 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 @RestController
+@RequestMapping ("/msb")
 public class ControllerServiceB {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ControllerServiceB.class);
-    private static final String MSC = "http://localhost:8082/msb";
-    @Autowired
-    RestTemplate restTemplate;
 
-    @Bean
-    public RestTemplate getRestTemplate() {
-        return new RestTemplate();
+    @Autowired
+    private ServiceClientB serviceClientB;
+
+    @GetMapping
+    public ResponseEntity<String> getMsb() throws RestClientException {
+        try {
+            LOGGER.info("calling microservice msc");
+            var response = serviceClientB.response();
+            LOGGER.info("finishing call microservice msc");
+            return ResponseEntity.ok(response);
+
+        }catch (RestClientException ex){
+            ex.getMessage();
+        }
+        return ResponseEntity.internalServerError().build();
     }
 
     @Bean
     public Sampler defaultSampler(){
         return Sampler.ALWAYS_SAMPLE;
-    }
-
-    @GetMapping ("/msb")
-    public String call1(){
-        LOGGER.info("Calling microservice C");
-        String url = MSC;
-        try {
-            Thread.sleep(1000);
-        }catch (Exception ex){
-            System.out.println("throws exception to test");
-        }
-        String response = (String)
-                restTemplate.exchange(url, HttpMethod.GET, null, String.class).getBody();
-        LOGGER.info("Response received to msc is " + response);
-        return response;
     }
 }
